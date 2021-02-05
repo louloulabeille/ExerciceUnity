@@ -22,8 +22,8 @@ namespace ExerciceUnity
             //ListeClientNoCommand();
             //ListeClientNoCommandDate(2010);
             //ListeProduitCategorieNoRupture();
-            //ChiffreAffaireClient("France");
-            ClientMoreRemise();
+            ChiffreAffaireClient("France");
+            //ClientMoreRemise();
         }
 
         internal static void AfficheClientCommence (string name)
@@ -117,7 +117,8 @@ namespace ExerciceUnity
         {
             using (ComptoirAnglais_V1Context dbcontext = new ComptoirAnglais_V1Context())
             {
-                var query = dbcontext.Customers.ToList().GroupJoin(dbcontext.Orders, c => c.CustomerId, o => o.CustomerId, (c, o) => new { customer = c, nb = o.Count() });
+                var query = dbcontext.Customers.ToList()
+                    .GroupJoin(dbcontext.Orders, c => c.CustomerId, o => o.CustomerId, (c, o) => new { customer = c, nb = o.Count() });
                 foreach(var item in query )
                 {
                     Console.WriteLine(item.customer.CompanyName + " : " + item.nb);
@@ -129,12 +130,14 @@ namespace ExerciceUnity
                     Console.WriteLine(item.custom.CompanyName + " nombre de commande : " + item.nb);
                 }
 
+                // pas bonne
                 var query3 = dbcontext.Customers.Join(dbcontext.Orders, c => c.CustomerId, o => o.CustomerId, (o, c) => new {c.Customer.CompanyName })
                     .GroupBy(x=>x.CompanyName,(name,nombre)=> new {key=name,count=nombre.Count()}).OrderBy(t=>t.key);
                 foreach (var item in query3 )
                 {
                     Console.WriteLine(item.key+" : "+item.count);
                 }
+                ////
             }
         }
 
@@ -196,23 +199,23 @@ namespace ExerciceUnity
         {
             using (ComptoirAnglais_V1Context dbcontext = new ComptoirAnglais_V1Context())
             {
-                //var query = dbcontext.Customers.Where(x => x.Country.Contains(country))//.Include(x => x.Orders).ThenInclude(x => x.OrderDetails)
-                //    .Select(x => new
-                //    {
-                //        nom = x.CompanyName,
-                //        chiffre = x.Orders.Select(y => y.OrderDetails.Sum(y => y.Quantity * (y.UnitPrice * (y.Discount == 0 ? (decimal)1 : (decimal)(1 - y.Discount)))))
-                //    });
+                var query = dbcontext.Customers.Where(x => x.Country.Contains(country))//.Include(x => x.Orders).ThenInclude(x => x.OrderDetails)
+                    .Select(x => new
+                    {
+                        nom = x.CompanyName,
+                        chiffre = x.Orders.Select(y => y.OrderDetails.Sum(y => y.Quantity * (y.UnitPrice * (y.Discount == 0 ? (decimal)1 : (decimal)(1 - y.Discount)))))
+                    });
 
-                //foreach(var item in query)
-                //{
-                //    Console.WriteLine(item.nom);
-                //    decimal chiffre = 0;
-                //    foreach(decimal x in item.chiffre )
-                //    {
-                //        chiffre += x;
-                //    }
-                //    Console.WriteLine(chiffre);
-                //}
+                foreach (var item in query)
+                {
+                    Console.WriteLine(item.nom);
+                    decimal chiffre = 0;
+                    foreach (decimal x in item.chiffre)
+                    {
+                        chiffre += x;
+                    }
+                    Console.WriteLine(chiffre);
+                }
 
                 var query2 = dbcontext.Customers.Where(x => x.Country.Contains(country))
                     .Join(dbcontext.Orders, c => c.CustomerId, o => o.CustomerId, (c, o) => new { cus = c, ord = o})
@@ -221,7 +224,7 @@ namespace ExerciceUnity
                     .Select(y=>new { name=y.Key.CompanyName, chiffre= y
                     .Sum(t=>t.orde.Quantity*( t.orde.UnitPrice*(t.orde.Discount==0?(decimal)1:(decimal)(1-t.orde.Discount)) ) ) }) ;
 
-                /*var query3 = from customer in dbcontext.Customers
+                var query3 = from customer in dbcontext.Customers
                              join order in
                              dbcontext.Orders on customer.CustomerId equals order.CustomerId into orderss
                              from o in orderss.DefaultIfEmpty()
@@ -229,13 +232,14 @@ namespace ExerciceUnity
                              dbcontext.OrderDetails on o.OrderId equals orderdetail.OrderId into orderdetails
                              from or in orderdetails.DefaultIfEmpty()
                              where customer.Country.StartsWith(country)
-                             group customer by new { name = customer.CompanyName, id = customer.CustomerId } into c
-                             select new
-                             {
-                                 name = c.Key.name,
-                                 id = c.Key.id,
-                                 chiffre = c.Sum(x=>x.Orders.Count())
-                             };*/
+                             select new { name=customer.CompanyName, id=customer.CustomerId,  };
+                             //group customer by new { name = customer.CompanyName, id = customer.CustomerId } into c
+                             //select new
+                             //{
+                             //    name = c.Key.name,
+                             //    id = c.Key.id,
+                             //    chiffre = c.Sum(x => x.Orders.Count())
+                             //};
 
                 foreach (var item in query2)
                 {
@@ -279,8 +283,8 @@ namespace ExerciceUnity
         {
             using (ComptoirAnglais_V1Context dbcontext = new ComptoirAnglais_V1Context())
             {
-                var query = dbcontext.Categories.Include(x => x.Products)
-                    .Where(t => t.Products.Select(h => h.UnitPrice)==t.Products.Max(u=>u.UnitPrice));
+                var query = dbcontext.Categories.Include(x => x.Products);
+   //                 .Where(t => t.Products.Select(h => h.UnitPrice)==t.Products.Max(u=>u.UnitPrice));
             }
         }
     }
